@@ -179,3 +179,98 @@ Robust to outliers
 Handles non-linearity well
 
 Use Case Here: Predict "Recommended Quantity" of green bonds based on ESG, sentiment, issuer sector, etc.
+
+
+
+
+1. Input Sources
+ESG Ratings
+(CSV file — Sustainalytics, LSEG, MSCI)
+
+Sentiment Score
+(TXT file — Extracted score)
+
+Green Bond Data
+(CSV — Includes issuer, sector, bond type, amount issued, etc.)
+
+⬇️
+
+2. Normalize ESG Ratings
+Sustainalytics → Converts to score out of 10 (inverted scale).
+
+LSEG → Converts to score out of 10.
+
+MSCI → Maps letter ratings (e.g., AA, A) to numeric values.
+
+⬇️
+
+3. Load Sentiment Score
+Reads a sentiment score from a text file (e.g., “Sentiment: 0.78”).
+
+⬇️
+
+4. Calculate Overall ESG Score
+Combines:
+
+ESG scores (weighted sum: LSEG 40%, Sustainalytics 30%, MSCI 30%)
+
+Adds MSCI bonus (10 or 5 points based on score)
+
+Sentiment impact = sentiment_score × 15
+
+⬇️
+
+5. Prepare Bond Data Features
+Add:
+
+Quality Score = Amount Issued × 0.5
+
+SECTOR_SCORE = numeric category from issuer sector
+
+REVIEWER_SCORE = numeric category from external reviewer
+
+Define Recommended Quantity = Amount Issued × 10
+
+⬇️
+
+6. Train ML Model
+Model: Random Forest Regressor
+
+Features: ESG score, sentiment, quality, sector, reviewer
+
+Target: Recommended Quantity
+
+Splits: 80% train / 20% test
+
+Outputs MSE and R² for evaluation
+
+⬇️
+
+7. Generate Recommendations
+For each bond:
+
+If green bond:
+
+Low score → "Strong Buy"
+
+Medium score → "Buy"
+
+Close to benchmark → "Strategic Buy"
+
+Default fallback: "Hold"
+
+⬇️
+
+8. Buffer Classification
+Based on average ESG score:
+
+Buffers: Excellent (8-10), Good (6-8), etc.
+
+Custom rules to show/hide buffers in Excel
+
+⬇️
+
+9. Export to Excel
+Sheet 1: ESG Data + buffer analysis
+
+Sheet 2: Top 5 recommendations with score and sentiment
