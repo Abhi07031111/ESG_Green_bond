@@ -1,0 +1,181 @@
+Here’s a detailed, line-by-line explanation of your Python script for the ML-based Green Bond Recommendation System. I'll cover the purpose, structure, logic, and the machine learning model used.
+
+📦 Library Imports
+python
+Copy
+Edit
+import os
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+from openpyxl import Workbook
+os: Provides functions to interact with the operating system.
+
+pandas: Used for reading, cleaning, and manipulating data.
+
+numpy: Used for numerical operations like mean calculation.
+
+sklearn.ensemble.RandomForestRegressor: The ML model used to predict how much green bonds should be recommended.
+
+sklearn.model_selection.train_test_split: For splitting the data into training and testing sets.
+
+sklearn.metrics: Used to evaluate model performance (MSE and R²).
+
+openpyxl: Used for writing Excel files (.xlsx).
+
+🧮 ESG Score Normalization Functions
+python
+Copy
+Edit
+def normalize_sustainalytics(score):
+    ...
+def normalize_lseg(score):
+    ...
+def normalize_msci(rating):
+    ...
+These three functions normalize ESG scores from different rating agencies (Sustainalytics, LSEG, MSCI) into a consistent scale from 0 to 10.
+
+Sustainalytics: Lower is better (risk-based), so we reverse the scale.
+
+LSEG: Higher is better (already on a 0-100 scale), scaled down.
+
+MSCI: Converts ratings like AAA, AA, A etc. to numerical values.
+
+📄 Load and Parse ESG Data
+python
+Copy
+Edit
+def load_esg_data(csv_file, company_name):
+    ...
+Reads ESG ratings from a CSV.
+
+Standardizes column names.
+
+Extracts scores per agency.
+
+Normalizes them.
+
+Computes the average ESG score (on a 1-10 scale).
+
+🧠 Load Sentiment Score
+python
+Copy
+Edit
+def load_sentiment(txt_file):
+    ...
+Reads a sentiment score from a .txt file (e.g., from NLP analysis).
+
+Expected format: "Sentiment: 0.75" → extracts the float value.
+
+🤖 ML Model: Recommend Green Bonds
+python
+Copy
+Edit
+def recommend_green_bonds_ml(...):
+    ...
+This is the core logic of the application. Here's how it works:
+
+1. Score Computation
+python
+Copy
+Edit
+msci_boost = 10 if esg_data['MSCI'] >= 8.5 else 5
+overall_score = ...
+Combines weighted ESG scores from different agencies.
+
+Adds a boost for high MSCI scores.
+
+Adjusts based on sentiment analysis score (sentiment_impact).
+
+2. Data Engineering
+python
+Copy
+Edit
+bond_data['Quality Score'] = ...
+bond_data['SECTOR_SCORE'] = ...
+bond_data['REVIEWER_SCORE'] = ...
+Creates features for ML: sector, external reviewer, amount issued, etc.
+
+3. Model Training
+python
+Copy
+Edit
+X_train, X_test, y_train, y_test = ...
+model = RandomForestRegressor(...)
+model.fit(...)
+Trains a Random Forest Regressor to predict "Recommended Quantity".
+
+Random Forest is an ensemble learning method combining multiple decision trees to improve accuracy and control overfitting.
+
+4. Performance Metrics
+python
+Copy
+Edit
+y_pred = model.predict(...)
+print(f'Model Performance: MSE = ..., R2 = ...')
+Evaluates model using:
+
+MSE (Mean Squared Error): Lower is better.
+
+R² (Coefficient of Determination): Closer to 1 means better fit.
+
+5. Generate Recommendations
+python
+Copy
+Edit
+if row['BOND_TYPE'].lower() == 'green':
+    ...
+Based on the final score, assigns a bond a Buy/Hold/Strong Buy recommendation.
+
+6. Prepare Buffers
+python
+Copy
+Edit
+recommendations_df['Buffer 1'] = buffer1
+...
+Adds ESG score-based buffers for interpretation & filtering.
+
+💾 Save Results to Excel
+python
+Copy
+Edit
+with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+    ...
+Saves both ESG and recommendation data to separate sheets in an Excel file.
+
+🏁 Driver Code
+python
+Copy
+Edit
+company_name = 'Allianz SE'
+esg_data = load_esg_data(...)
+sentiment_score = load_sentiment(...)
+bond_data = pd.read_csv(...)
+...
+recommend_green_bonds_ml(...)
+Loads and prepares data.
+
+Calls the ML-based recommendation engine.
+
+Saves the final output as an Excel file.
+
+🤖 Summary of ML Algorithm
+Random Forest Regressor
+
+Type: Supervised Regression
+
+Trees: Builds multiple decision trees using bootstrapped samples.
+
+Aggregation: Averages predictions from all trees.
+
+Pros:
+
+Good accuracy
+
+Robust to outliers
+
+Handles non-linearity well
+
+Use Case Here: Predict "Recommended Quantity" of green bonds based on ESG, sentiment, issuer sector, etc.
