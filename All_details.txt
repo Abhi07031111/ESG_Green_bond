@@ -122,3 +122,13 @@ Handles Excel file creation, appending, and sheet handling via openpyxl.
 
 📈 MACHINE LEARNING WORKFLOW SUMMARY
 
+Step	Action
+Data Collection	Read ESG + sentiment + bond data
+Feature Engineering	Normalize scores, factorize sectors, add quality scores
+Model	RandomForestRegressor
+Training/Test Split	80/20
+Evaluation	MSE + R²
+Prediction	Predict recommended bond quantities
+Business Rule Logic	Translate predictions into recommendations
+Export	Save to Excel for stakeholder use
+
