@@ -1,0 +1,124 @@
+💡 OVERVIEW
+This system:
+Reads ESG scores from three agencies (Sustainalytics, LSEG, MSCI) and normalizes them.
+Loads a sentiment score (e.g., from news or social media analysis).
+Reads bond issuance data for a company.
+Uses a Random Forest Regressor (ML model) to predict the "recommended quantity" of green bonds.
+Outputs ESG interpretation + top bond recommendations to Excel.
+
+🔄 DETAILED FUNCTIONAL DESCRIPTION
+
+🔹 1. Normalization Functions
+These convert raw ESG scores into a uniform 1-10 scale so different scoring models can be compared.
+python
+CopyEdit
+def normalize_sustainalytics(score):
+    return round(10 - (score / 100) * 10, 2)
+Sustainalytics: Lower raw scores are better, so it's inversely scaled.
+python
+CopyEdit
+def normalize_lseg(score):
+    return round((score / 100) * 10, 2)
+LSEG: Higher raw scores are better, so it's directly scaled.
+python
+CopyEdit
+def normalize_msci(rating):
+    rating_map = {'CCC': 2.0, ..., 'AAA': 10.0}
+    return rating_map.get(rating)
+MSCI: Converts alphanumeric ratings (e.g., "BBB", "AA") to numeric equivalents.
+
+🔹 2. ESG Data Loader
+python
+CopyEdit
+def load_esg_data(csv_file, company_name):
+Reads the ESG CSV file
+Extracts each agency's rating
+Normalizes them
+Computes an average ESG score (1-10) if available
+
+🔹 3. Sentiment Loader
+python
+CopyEdit
+def load_sentiment(txt_file):
+Reads sentiment score from a .txt file (formatted as "Average Sentiment: 0.63")
+This likely comes from an NLP pipeline like VADER, TextBlob, or BERT.
+
+🔹 4. Green Bond Recommendation (Main ML Function)
+python
+CopyEdit
+def recommend_green_bonds_ml(esg_data, sentiment_score, bond_data, output_file, ...)
+✅ Step-by-Step:
+
+✅ A. Calculate Overall Score
+This is a weighted average of ESG scores + boost from sentiment.
+python
+CopyEdit
+overall_score = (
+    (LSEG_score * 0.4) +
+    (Sustainalytics_score * 0.3) +
+    (MSCI_score_as_boost * 0.3) +
+    (sentiment_score * 15)
+)
+
+✅ B. Feature Engineering for ML
+Prepares input data for ML training:
+python
+CopyEdit
+bond_data['Quality Score'] = bond_data['AMOUNT_ISSUED'] * 0.5
+bond_data['SECTOR_SCORE'] = pd.factorize(bond_data['ISSUER_SECTOR'])[0]
+bond_data['REVIEWER_SCORE'] = pd.factorize(bond_data['EXTERNAL_REVIEWER'])[0]
+Creates numerical features:
+Quality score based on issued amount
+Categorical values encoded into integers
+
+✅ C. ML Algorithm Used: Random Forest Regressor
+python
+CopyEdit
+model = RandomForestRegressor(n_estimators=100, max_depth=5, random_state=42)
+🔍 Why Random Forest?
+Ensemble method combining decision trees
+Handles nonlinear features well
+Robust against overfitting (compared to plain decision trees)
+Good for tabular data like this
+➕ Inputs:
+Features like ESG score, sentiment impact, bond size, sector
+➖ Output:
+Predicted Recommended Quantity of bonds
+
+✅ D. Performance Metrics
+python
+CopyEdit
+mean_squared_error(y_test, y_pred)
+r2_score(y_test, y_pred)
+Evaluates how well the model predicts bond quantity:
+MSE (lower is better)
+R² Score (closer to 1 is better)
+
+✅ E. Bond Recommendation Logic
+Based on thresholds and score ranges:
+python
+CopyEdit
+if BOND_TYPE == 'green':
+    if overall_score < 50:
+        recommendation = 'Strong Buy'
+    elif overall_score < 70:
+        recommendation = 'Buy'
+    elif overall_score < industry_benchmark:
+        recommendation = 'Strategic Buy'
+
+✅ F. Buffer Tags + ESG Recommendation
+Adds interpretation layers:
+python
+CopyEdit
+EsgBuffer2 = 'Excellent' if x >= 8 else 'Good' ...
+Recommendation = 'Maintain or Increase Green Investments' if x >= 8 else ...
+Makes results human-readable for business decision-makers.
+
+📤 5. Excel Output
+Two sheets:
+Esgdata → Raw + normalized ESG scores, buffer interpretations
+Data → Top 5 green bond recommendations with sentiment + score
+Handles Excel file creation, appending, and sheet handling via openpyxl.
+
+📈 MACHINE LEARNING WORKFLOW SUMMARY
+
